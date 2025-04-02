@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Форма відправки</title>
+</head>
+<body>
+    <form id="userForm">
+        <label for="name">Ім'я:</label>
+        <input type="text" id="name" name="name" required>
+        <br>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        <br>
+        <button type="submit">Відправити</button>
+        <button type="button" id="restoreData">Відновити останні дані</button>
+    </form>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const form = document.getElementById("userForm");
+            const restoreButton = document.getElementById("restoreData");
+            const storageKey = "lah";
+
+            form.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                
+                const name = form.name.value.trim();
+                const email = form.email.value.trim();
+
+                if (!name || !email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+                    alert("Будь ласка, введіть коректне ім'я та email");
+                    return;
+                }
+                
+                const userData = { name, email };
+                localStorage.setItem(storageKey, JSON.stringify(userData));
+
+                try {
+                    const response = await fetch("https://reqres.in/api/users", {
+                        method: "PUT", 
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(userData)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(result.error || "Помилка при відправці даних");
+                    }
+                    
+                    alert("Дані успішно відправлено!");
+                } catch (error) {
+                    alert("Сталася помилка: " + error.message);
+                }
+            });
+
+            restoreButton.addEventListener("click", () => {
+                const savedData = localStorage.getItem(storageKey);
+                if (savedData) {
+                    const { name, email } = JSON.parse(savedData);
+                    form.name.value = name;
+                    form.email.value = email;
+                } else {
+                    alert("Немає збережених даних");
+                }
+            });
+        });
+    </script>
+</body>
+</html>
